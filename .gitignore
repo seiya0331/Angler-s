@@ -1,0 +1,14 @@
+# Mac
+.DS_Store
+
+# Node / Flutter
+node_modules/
+.build/
+.dart_tool/
+
+# Java
+target/
+*.log
+
+# env
+.env
