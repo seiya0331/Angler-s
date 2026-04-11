@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/post.dart';
+import '../services/post_service.dart';
 
 class PostPage extends StatefulWidget {
-  final Function(Post) onPost;
-
-  const PostPage({super.key, required this.onPost});
+  const PostPage({super.key});
 
   @override
   State<PostPage> createState() => _PostPageState();
@@ -13,15 +12,43 @@ class PostPage extends StatefulWidget {
 class _PostPageState extends State<PostPage> {
   final titleController = TextEditingController();
   final contentController = TextEditingController();
+  final postService = PostService();
 
-  void submit() {
-    final post = Post(
-      title: titleController.text,
-      content: contentController.text,
-    );
+  bool isLoading = false;
 
-    widget.onPost(post);
-    Navigator.pop(context);
+  Future<void> submitPost() async {
+    final title = titleController.text.trim();
+    final content = contentController.text.trim();
+
+    if (title.isEmpty || content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('タイトルと内容を入力してください')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final post = Post(id: '', title: title, content: content);
+      await postService.addPost(post);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('投稿に失敗しました: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    contentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -41,10 +68,12 @@ class _PostPageState extends State<PostPage> {
               decoration: const InputDecoration(labelText: '内容'),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: submit,
-              child: const Text('投稿する'),
-            ),
+            if (isLoading) const CircularProgressIndicator(),
+            if (!isLoading)
+              ElevatedButton(
+                onPressed: submitPost,
+                child: const Text('投稿する'),
+              ),
           ],
         ),
       ),

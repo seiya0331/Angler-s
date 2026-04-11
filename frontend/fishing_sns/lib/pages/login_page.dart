@@ -13,18 +13,81 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   final auth = AuthService();
 
+  bool isLoading = false;
+
+  // 🔐 ログイン
   void login() async {
-    await auth.signIn(
-      emailController.text,
-      passwordController.text,
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    // バリデーション
+    if (email.isEmpty || password.isEmpty) {
+      showMessage('メールとパスワードを入力してください');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      showMessage('正しいメールアドレスを入力してください');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await auth.signIn(email, password);
+    } catch (e) {
+      if (!mounted) return;
+      showMessage('ログイン失敗: $e');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  // 🆕 新規登録
+  void register() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    // バリデーション
+    if (email.isEmpty || password.isEmpty) {
+      showMessage('メールとパスワードを入力してください');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      showMessage('正しいメールアドレスを入力してください');
+      return;
+    }
+
+    if (password.length < 6) {
+      showMessage('パスワードは6文字以上にしてください');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await auth.signUp(email, password);
+    } catch (e) {
+      if (!mounted) return;
+      showMessage('登録失敗: $e');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  // 🔔 メッセージ表示
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
-  void register() async {
-    await auth.signUp(
-      emailController.text,
-      passwordController.text,
-    );
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'メール'),
+              keyboardType: TextInputType.emailAddress,
             ),
             TextField(
               controller: passwordController,
@@ -45,14 +109,19 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: login,
-              child: const Text('ログイン'),
-            ),
-            ElevatedButton(
-              onPressed: register,
-              child: const Text('新規登録'),
-            ),
+            
+            if (isLoading) const CircularProgressIndicator(),
+
+            if (!isLoading) ...[
+              ElevatedButton(
+                onPressed: login,
+                child: const Text('ログイン'),
+              ),
+              ElevatedButton(
+                onPressed: register,
+                child: const Text('新規登録'),
+              ),
+            ],
           ],
         ),
       ),
