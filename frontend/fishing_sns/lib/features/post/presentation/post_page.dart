@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/post.dart';
-import '../services/post_service.dart';
+import '../data/post_repository.dart';
+import '../domain/post.dart';
 
 class PostPage extends StatefulWidget {
   const PostPage({super.key});
@@ -12,7 +12,7 @@ class PostPage extends StatefulWidget {
 class _PostPageState extends State<PostPage> {
   final titleController = TextEditingController();
   final contentController = TextEditingController();
-  final postService = PostService();
+  final postRepository = PostRepository();
 
   bool isLoading = false;
 
@@ -31,7 +31,7 @@ class _PostPageState extends State<PostPage> {
 
     try {
       final post = Post(id: '', title: title, content: content);
-      await postService.addPost(post);
+      await postRepository.addPost(post);
       if (!mounted) return;
       Navigator.pop(context);
     } catch (e) {

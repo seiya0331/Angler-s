@@ -1,15 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/post.dart';
+import '../domain/post.dart';
 
-class PostService {
+class PostRepository {
   final _db = FirebaseFirestore.instance;
 
-  // 投稿追加
   Future<void> addPost(Post post) async {
     await _db.collection('posts').add(post.toMap());
   }
 
-  // 投稿一覧取得（リアルタイムで更新される）
   Stream<List<Post>> getPosts() {
     return _db
         .collection('posts')

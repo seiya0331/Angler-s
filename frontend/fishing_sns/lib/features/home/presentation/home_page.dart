@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/post.dart';
-import 'post_page.dart';
-import '../services/auth_service.dart';
-import '../services/post_service.dart';
+import '../../../core/widgets/loading_view.dart';
+import '../../auth/data/auth_repository.dart';
+import '../../post/data/post_repository.dart';
+import '../../post/domain/post.dart';
+import '../../post/presentation/post_list_item.dart';
+import '../../post/presentation/post_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,8 +14,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final auth = AuthService();
-  final postService = PostService();
+  final authRepository = AuthRepository();
+  final postRepository = PostRepository();
 
   void goToPostPage() {
     Navigator.push(
@@ -32,16 +34,14 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             onPressed: () {
-              auth.signOut();
+              authRepository.signOut();
             },
             icon: const Icon(Icons.logout),
           ),
         ],
       ),
-
-      // Firestoreから投稿取得
       body: StreamBuilder<List<Post>>(
-        stream: postService.getPosts(),
+        stream: postRepository.getPosts(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingView();
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -70,23 +70,11 @@ class _HomePageState extends State<HomePage> {
           return ListView.builder(
             itemCount: posts.length,
             itemBuilder: (context, index) {
-              final post = posts[index];
-
-              return Card(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                child: ListTile(
-                  title: Text(post.title),
-                  subtitle: Text(post.content),
-                ),
-              );
+              return PostListItem(post: posts[index]);
             },
           );
         },
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: goToPostPage,
         child: const Icon(Icons.add),

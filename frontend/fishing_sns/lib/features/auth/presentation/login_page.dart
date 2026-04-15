@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import '../../../core/utils/validators.dart';
+import '../data/auth_repository.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,30 +12,30 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final auth = AuthService();
+  final authRepository = AuthRepository();
 
   bool isLoading = false;
 
-  // 🔐 ログイン
   void login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    // バリデーション
-    if (email.isEmpty || password.isEmpty) {
-      showMessage('メールとパスワードを入力してください');
+    final emailError = Validators.validateEmail(email);
+    if (emailError != null) {
+      showMessage(emailError);
       return;
     }
 
-    if (!email.contains('@')) {
-      showMessage('正しいメールアドレスを入力してください');
+    final passwordError = Validators.validatePassword(password, minLength: 1);
+    if (passwordError != null) {
+      showMessage(passwordError);
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      await auth.signIn(email, password);
+      await authRepository.signIn(email, password);
     } catch (e) {
       if (!mounted) return;
       showMessage('ログイン失敗: $e');
@@ -43,31 +44,26 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // 🆕 新規登録
   void register() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    // バリデーション
-    if (email.isEmpty || password.isEmpty) {
-      showMessage('メールとパスワードを入力してください');
+    final emailError = Validators.validateEmail(email);
+    if (emailError != null) {
+      showMessage(emailError);
       return;
     }
 
-    if (!email.contains('@')) {
-      showMessage('正しいメールアドレスを入力してください');
-      return;
-    }
-
-    if (password.length < 6) {
-      showMessage('パスワードは6文字以上にしてください');
+    final passwordError = Validators.validatePassword(password);
+    if (passwordError != null) {
+      showMessage(passwordError);
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      await auth.signUp(email, password);
+      await authRepository.signUp(email, password);
     } catch (e) {
       if (!mounted) return;
       showMessage('登録失敗: $e');
@@ -76,7 +72,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // 🔔 メッセージ表示
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -109,9 +104,7 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            
             if (isLoading) const CircularProgressIndicator(),
-
             if (!isLoading) ...[
               ElevatedButton(
                 onPressed: login,

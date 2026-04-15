@@ -9,7 +9,6 @@ class Post {
     required this.content,
   });
 
-  // 🔽 Firestore → Post
   factory Post.fromFirestore(String id, Map<String, dynamic> data) {
     return Post(
       id: id,
@@ -18,7 +17,6 @@ class Post {
     );
   }
 
-  // 🔽 Post → Firestore
   Map<String, dynamic> toMap() {
     return {
       'title': title,
