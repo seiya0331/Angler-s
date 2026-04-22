@@ -5,6 +5,7 @@ import '../../post/data/post_repository.dart';
 import '../../post/domain/post.dart';
 import '../../post/presentation/post_list_item.dart';
 import '../../post/presentation/post_page.dart';
+import '../../user/presentation/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +33,17 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('釣りSNS'),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.person),
+          ),
           IconButton(
             onPressed: () {
               authRepository.signOut();
@@ -70,7 +82,12 @@ class _HomePageState extends State<HomePage> {
           return ListView.builder(
             itemCount: posts.length,
             itemBuilder: (context, index) {
-              return PostListItem(post: posts[index]);
+              final currentUserId = authRepository.currentUser?.uid ?? '';
+              return PostListItem(
+                post: posts[index],
+                currentUserId: currentUserId,
+                postRepository: postRepository,
+              );
             },
           );
         },

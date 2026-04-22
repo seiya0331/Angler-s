@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 
@@ -10,6 +11,7 @@ class PostPage extends StatefulWidget {
 }
 
 class _PostPageState extends State<PostPage> {
+  final authRepository = AuthRepository();
   final titleController = TextEditingController();
   final contentController = TextEditingController();
   final postRepository = PostRepository();
@@ -17,8 +19,16 @@ class _PostPageState extends State<PostPage> {
   bool isLoading = false;
 
   Future<void> submitPost() async {
+    final currentUser = authRepository.currentUser;
     final title = titleController.text.trim();
     final content = contentController.text.trim();
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ログイン状態を確認できませんでした')),
+      );
+      return;
+    }
 
     if (title.isEmpty || content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -30,7 +40,12 @@ class _PostPageState extends State<PostPage> {
     setState(() => isLoading = true);
 
     try {
-      final post = Post(id: '', title: title, content: content);
+      final post = Post(
+        id: '',
+        userId: currentUser.uid,
+        title: title,
+        content: content,
+      );
       await postRepository.addPost(post);
       if (!mounted) return;
       Navigator.pop(context);

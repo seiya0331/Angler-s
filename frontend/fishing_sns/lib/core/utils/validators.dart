@@ -20,4 +20,14 @@ class Validators {
     }
     return null;
   }
+
+  static String? validateName(String value) {
+    if (value.isEmpty) {
+      return '名前を入力してください';
+    }
+    if (value.length > 20) {
+      return '名前は1〜20文字で入力してください';
+    }
+    return null;
+  }
 }
